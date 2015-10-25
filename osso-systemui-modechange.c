@@ -165,3 +165,17 @@ void plugin_close(system_ui_data *data)
 	}
 	free_callback(&priv.callback);
 }
+
+gboolean plugin_init(system_ui_data *data)
+{
+	priv.ui = data;
+	priv.note = 0;
+	priv.window_priority = gconf_client_get_int(data->gc_client,"/system/systemui/modechange/window_priority",NULL);
+	if (!priv.window_priority)
+	{
+		priv.window_priority = 60;
+	}
+	add_handler("modechange_open",modechange_open_handler,data);
+	add_handler("modechange_close",modechange_close_handler,data);
+	return TRUE;
+}
