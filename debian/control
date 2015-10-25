@@ -1,0 +1,20 @@
+Source: osso-systemui-modechange
+Section: misc
+Maintainer: Jonathan Wilson <jfwfreo@tpgi.com.au>
+Build-Depends: debhelper (>= 5), pkg-config, libhildon1-dev, libgconf2-dev, libgtk2.0-dev, libdbus-1-dev,
+ libglib2.0-dev, mce-dev, osso-systemui-dev, osso-systemui-dbus-dev, osso-systemui-modechange-dev
+Priority: optional
+Standards-Version: 3.7.2
+
+Package: osso-systemui-modechange
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, osso-systemui (>= 0.0.3.8), osso-powerup-shutdown-l10n-mr0 | osso-powerup-shutdown-l10n-mr
+Description: Mode change
+ This package contains the modechange dialog.
+
+Package: osso-systemui-modechange-dbg
+Architecture: any
+Section: devel
+Depends: osso-systemui-modechange (= ${Source-Version})
+Description: Mode change debug symbls
+ This package contains the modechange debug symbls
