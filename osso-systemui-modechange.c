@@ -3,7 +3,7 @@
 
    @brief Maemo systemui modechange dialog plugin
 
-   Copyright (C) 2012 Ivaylo Dimitrov <freemangordon@abv.bg>
+   Copyright (C) 2015 Jonathan Wilson <jfwfreo@tpgi.com.au>
 
    This file is part of osso-systemui-modechange.
 
