@@ -49,7 +49,7 @@ modechange_priv_t priv;
 
 int modechange_close_handler(const char *interface,const char *method,GArray *args,system_ui_data *data,system_ui_handler_arg *result)
 {
-	WindowPriority_HideWindow(GTK_WINDOW(priv.note));
+	WindowPriority_HideWindow(priv.note);
 	if (priv.note)
 	{
 		gtk_object_destroy(GTK_OBJECT(priv.note));
@@ -64,7 +64,7 @@ void modechange_destroy_window(guint argc,system_ui_data *data)
 	if (priv.note)
 	{
 		do_callback(data,&priv.callback,argc);
-		WindowPriority_HideWindow(GTK_WINDOW(priv.note));
+		WindowPriority_HideWindow(priv.note);
 		gtk_object_destroy(GTK_OBJECT(priv.note));
 		priv.note = 0;
 		free_callback(&priv.callback);
@@ -116,14 +116,14 @@ int modechange_open_handler(const char *interface,const char *method,GArray *arg
 		{
 			if (priv.note)
 			{
-				WindowPriority_HideWindow(GTK_WINDOW(priv.note));
+				WindowPriority_HideWindow(priv.note);
 				gtk_object_destroy(GTK_OBJECT(priv.note));
 			}
-			priv.note = hildon_note_new_confirmation(GTK_WINDOW(data->unkwindow),dcgettext("osso-powerup-shutdown","powerup_nc_exit_flight_mode",5));
+			priv.note = hildon_note_new_confirmation(GTK_WINDOW(data->parent),dcgettext("osso-powerup-shutdown","powerup_nc_exit_flight_mode",5));
 			g_signal_connect_data(G_OBJECT(priv.note),"response",G_CALLBACK(modechange_response_handler),data,NULL,0);
 			g_signal_connect_data(G_OBJECT(priv.note),"key-press-event",G_CALLBACK(modechange_key_press_event_handler),data,NULL,0);
 			g_signal_connect_data(GTK_OBJECT(priv.note),"destroy",G_CALLBACK(modechange_destroy_handler),data,NULL,0);
-			WindowPriority_ShowWindow(GTK_WINDOW(priv.note),priv.window_priority);
+			WindowPriority_ShowWindow(priv.note,priv.window_priority);
 			GtkWidget *grab = gtk_grab_get_current();
 			if (grab)
 			{
@@ -133,7 +133,7 @@ int modechange_open_handler(const char *interface,const char *method,GArray *arg
 		}
 		if (priv.note)
 		{
-			WindowPriority_HideWindow(GTK_WINDOW(priv.note));
+			WindowPriority_HideWindow(priv.note);
 			gtk_object_destroy(GTK_OBJECT(priv.note));
 			return 0;
 		}
@@ -157,7 +157,7 @@ void plugin_close(system_ui_data *data)
 {
 	remove_handler("modechange_open",data);
 	remove_handler("modechange_close",data);
-	WindowPriority_HideWindow(GTK_WINDOW(priv.note));
+	WindowPriority_HideWindow(priv.note);
 	if (priv.note)
 	{
 		gtk_object_destroy(GTK_OBJECT(priv.note));
