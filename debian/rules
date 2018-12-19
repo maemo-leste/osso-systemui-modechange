@@ -25,7 +25,7 @@ clean:
 	$(MAKE) clean
 	dh_clean
 
-binary: build
+binary-arch: build
 	dh_testdir
 	dh_testroot
 	dh_clean -k
@@ -43,5 +43,7 @@ binary: build
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb
+
+binary: binary-arch
 
 .PHONY: build clean binary
