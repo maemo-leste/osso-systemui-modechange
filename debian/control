@@ -15,6 +15,6 @@ Description: Mode change
 Package: osso-systemui-modechange-dbg
 Architecture: any
 Section: devel
-Depends: osso-systemui-modechange (= ${Source-Version})
+Depends: osso-systemui-modechange (= ${binary:Version})
 Description: Mode change debug symbls
  This package contains the modechange debug symbls

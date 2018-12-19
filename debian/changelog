@@ -1,3 +1,9 @@
+osso-systemui-modechange (0.3.7) unstable; urgency=low
+
+  * port to leste
+
+ -- Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>  Wed, 19 Dec 2018 00:18:32 +0200
+
 osso-systemui-modechange (0.3.6) unstable; urgency=low
 
   * Initial Release.

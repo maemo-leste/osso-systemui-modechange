@@ -39,143 +39,179 @@
 #include <systemui/modechange-dbus-names.h>
 
 typedef struct {
-	GtkWidget *note;
-	system_ui_callback_t callback;
-	system_ui_data *ui;
-	int window_priority;
+  GtkWidget *note;
+  system_ui_callback_t callback;
+  system_ui_data *ui;
+  int window_priority;
 } modechange_priv_t;
 
 modechange_priv_t priv;
 
-int modechange_close_handler(const char *interface,const char *method,GArray *args,system_ui_data *data,system_ui_handler_arg *result)
+int
+modechange_close_handler(const char *interface, const char *method,
+                         GArray *args, system_ui_data *data,
+                         system_ui_handler_arg *result)
 {
-	WindowPriority_HideWindow(priv.note);
-	if (priv.note)
-	{
-		gtk_object_destroy(GTK_OBJECT(priv.note));
-		priv.note = 0;
-	}
-	free_callback(&priv.callback);
-	return 118;
+  WindowPriority_HideWindow(priv.note);
+
+  if (priv.note)
+  {
+    gtk_object_destroy(GTK_OBJECT(priv.note));
+    priv.note = NULL;
+  }
+
+  systemui_free_callback(&priv.callback);
+
+  return DBUS_TYPE_VARIANT;
 }
 
-void modechange_destroy_window(guint argc,system_ui_data *data)
+void
+modechange_destroy_window(guint argc, system_ui_data *data)
 {
-	if (priv.note)
-	{
-		do_callback(data,&priv.callback,argc);
-		WindowPriority_HideWindow(priv.note);
-		gtk_object_destroy(GTK_OBJECT(priv.note));
-		priv.note = 0;
-		free_callback(&priv.callback);
-	}
+  if (priv.note)
+  {
+    do_callback(data, &priv.callback, argc);
+    WindowPriority_HideWindow(priv.note);
+    gtk_object_destroy(GTK_OBJECT(priv.note));
+    priv.note = NULL;
+    systemui_free_callback(&priv.callback);
+  }
 }
 
-void modechange_response_handler(GtkWidget *dialog, gint response_id, system_ui_data *data)
+void
+modechange_response_handler(GtkWidget *dialog, gint response_id,
+                            system_ui_data *data)
 {
-	if (response_id != GTK_RESPONSE_CANCEL && response_id == GTK_RESPONSE_OK)
-	{
-		modechange_destroy_window(1,data);
-	}
-	else
-	{
-		modechange_destroy_window(2,data);
-	}
+  if (response_id == GTK_RESPONSE_OK)
+    modechange_destroy_window(1, data);
+  else if (response_id == GTK_RESPONSE_CANCEL)
+    modechange_destroy_window(2, data);
 }
 
-void modechange_destroy_handler(GtkObject *object,system_ui_data *data)
+void
+modechange_destroy_handler(GtkObject *object,system_ui_data *data)
 {
-	if (priv.note)
-	{
-		modechange_destroy_window(2,data);
-	}
+  if (priv.note)
+    modechange_destroy_window(2, data);
 }
 
-gboolean modechange_key_press_event_handler(GtkWidget *widget,GdkEventKey *event,system_ui_data *data)
+gboolean
+modechange_key_press_event_handler(GtkWidget *widget, GdkEventKey *event,
+                                   system_ui_data *data)
 {
-	if (event->keyval == XK_Escape)
-	{
-		modechange_response_handler(GTK_WIDGET(priv.note),-6,data);
-		return TRUE;
-	}
-	return FALSE;
+  if (event->keyval == XK_Escape)
+  {
+    modechange_response_handler(GTK_WIDGET(priv.note), GTK_RESPONSE_CANCEL,
+                                data);
+    return TRUE;
+  }
+
+  return FALSE;
 }
 
-int modechange_open_handler(const char *interface,const char *method,GArray *args,system_ui_data *data,system_ui_handler_arg *result)
+int
+modechange_open_handler(const char *interface,
+                        const char *method,
+                        GArray *args,
+                        system_ui_data *data,
+                        system_ui_handler_arg *result)
 {
-	int supported_args[1] = {'u'};
-	if(!check_plugin_arguments(args, supported_args, 1))
-	{
-		return FALSE;
-	}
-	system_ui_handler_arg* hargs = ((system_ui_handler_arg*)args->data);
-	guint mode = hargs[4].data.u32;
-	if (mode)
-	{
-		if (mode == MODECHANGE_TO_NORMALMODE)
-		{
-			if (priv.note)
-			{
-				WindowPriority_HideWindow(priv.note);
-				gtk_object_destroy(GTK_OBJECT(priv.note));
-			}
-			priv.note = hildon_note_new_confirmation(GTK_WINDOW(data->parent),dcgettext("osso-powerup-shutdown","powerup_nc_exit_flight_mode",5));
-			g_signal_connect_data(G_OBJECT(priv.note),"response",G_CALLBACK(modechange_response_handler),data,NULL,0);
-			g_signal_connect_data(G_OBJECT(priv.note),"key-press-event",G_CALLBACK(modechange_key_press_event_handler),data,NULL,0);
-			g_signal_connect_data(GTK_OBJECT(priv.note),"destroy",G_CALLBACK(modechange_destroy_handler),data,NULL,0);
-			WindowPriority_ShowWindow(priv.note,priv.window_priority);
-			GtkWidget *grab = gtk_grab_get_current();
-			if (grab)
-			{
-				gtk_grab_remove(grab);
-			}
-			goto label1;
-		}
-		if (priv.note)
-		{
-			WindowPriority_HideWindow(priv.note);
-			gtk_object_destroy(GTK_OBJECT(priv.note));
-			return 0;
-		}
-		return 0;
-	}
-	do_callback(data,&priv.callback,1);
-	free_callback(&priv.callback);
-label1:
-	if (check_set_callback(args,&priv.callback) == 0)
-	{
-		result->data.i32 = -2;
-	}
-	else
-	{
-		result->data.i32 = -3;
-	}
-	return 105;
+  int supported_args[1] = {'u'};
+  system_ui_handler_arg *hargs;
+  modechange_t mode;
+
+  if(!check_plugin_arguments(args, supported_args, 1))
+    return FALSE;
+
+  hargs = ((system_ui_handler_arg *)args->data);
+  mode = hargs[4].data.u32;
+
+  switch (mode)
+  {
+    case MODECHANGE_TO_FLIGHTMODE:
+    {
+
+      systemui_do_callback(data, &priv.callback, 1);
+      systemui_free_callback(&priv.callback);
+      break;
+    }
+    case MODECHANGE_TO_NORMALMODE:
+    {
+      if (priv.note)
+      {
+        WindowPriority_HideWindow(priv.note);
+        gtk_object_destroy(GTK_OBJECT(priv.note));
+      }
+
+      priv.note =
+          hildon_note_new_confirmation(GTK_WINDOW(data->parent),
+                                       dgettext("osso-powerup-shutdown",
+                                                "powerup_nc_exit_flight_mode"));
+      g_signal_connect(G_OBJECT(priv.note), "response",
+                       G_CALLBACK(modechange_response_handler), data);
+      g_signal_connect(G_OBJECT(priv.note), "key-press-event",
+                       G_CALLBACK(modechange_key_press_event_handler),data);
+      g_signal_connect(G_OBJECT(priv.note), "destroy",
+                       G_CALLBACK(modechange_destroy_handler), data);
+      WindowPriority_ShowWindow(priv.note,priv.window_priority);
+
+      GtkWidget *grab = gtk_grab_get_current();
+
+      if (grab)
+        gtk_grab_remove(grab);
+
+      break;
+    }
+    default:
+    {
+      if (priv.note)
+      {
+        WindowPriority_HideWindow(priv.note);
+        gtk_object_destroy(GTK_OBJECT(priv.note));
+        return DBUS_TYPE_INVALID;
+      }
+
+      break;
+    }
+  }
+
+  if (!check_set_callback(args, &priv.callback))
+    result->data.i32 = -2;
+  else
+    result->data.i32 = -3;
+
+  return DBUS_TYPE_INT32;
 }
 
-void plugin_close(system_ui_data *data)
+void
+plugin_close(system_ui_data *data)
 {
-	remove_handler("modechange_open",data);
-	remove_handler("modechange_close",data);
-	WindowPriority_HideWindow(priv.note);
-	if (priv.note)
-	{
-		gtk_object_destroy(GTK_OBJECT(priv.note));
-		priv.note = 0;
-	}
-	free_callback(&priv.callback);
+  remove_handler(SYSTEMUI_MODECHANGE_OPEN_REQ,data);
+  remove_handler(SYSTEMUI_MODECHANGE_CLOSE_REQ,data);
+  WindowPriority_HideWindow(priv.note);
+
+  if (priv.note)
+  {
+    gtk_object_destroy(GTK_OBJECT(priv.note));
+    priv.note = NULL;
+  }
+
+  systemui_free_callback(&priv.callback);
 }
 
-gboolean plugin_init(system_ui_data *data)
+gboolean
+plugin_init(system_ui_data *data)
 {
-	priv.ui = data;
-	priv.note = 0;
-	priv.window_priority = gconf_client_get_int(data->gc_client,"/system/systemui/modechange/window_priority",NULL);
-	if (!priv.window_priority)
-	{
-		priv.window_priority = 60;
-	}
-	add_handler("modechange_open",modechange_open_handler,data);
-	add_handler("modechange_close",modechange_close_handler,data);
-	return TRUE;
+  priv.ui = data;
+  priv.note = NULL;
+  priv.window_priority = gconf_client_get_int(
+        data->gc_client, "/system/systemui/modechange/window_priority", NULL);
+
+  if (!priv.window_priority)
+    priv.window_priority = 60;
+
+  add_handler(SYSTEMUI_MODECHANGE_OPEN_REQ, modechange_open_handler, data);
+  add_handler(SYSTEMUI_MODECHANGE_CLOSE_REQ, modechange_close_handler, data);
+
+  return TRUE;
 }
