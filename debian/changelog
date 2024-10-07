@@ -1,3 +1,9 @@
+osso-systemui-modechange (0.3.8) unstable; urgency=low
+
+  * modernise debian dir
+
+ -- Merlijn Wajer <merlijn@wizzup.org>  Mon, 07 Oct 2024 13:48:28 +0200
+
 osso-systemui-modechange (0.3.7) unstable; urgency=low
 
   * port to leste
